@@ -2,6 +2,7 @@ from quart import Blueprint, Response, request, redirect
 from .error import abort
 from bot import get_streaming_bot, return_streaming_bot, logger
 from bot.config import Telegram
+from bot.utils.restart import emergency_restart
 from math import ceil, floor
 from bot.modules.telegram import get_file_properties
 
@@ -37,9 +38,20 @@ async def transmit_file(file_id):
             await return_streaming_bot(selected_bot)
             abort(404)
     except Exception as e:
+        error_message = str(e)
         logger.error(
-            "Failed to retrieve message %s using bot %s: %s", file_id, bot_name, e
+            "Failed to retrieve message %s using bot %s: %s",
+            file_id,
+            bot_name,
+            error_message,
         )
+
+        if "Cannot send requests while disconnected" in error_message:
+            logger.critical(
+                "Connection error detected while retrieving message, triggering emergency restart"
+            )
+            emergency_restart("Telegram connection lost during message retrieval")
+
         await return_streaming_bot(selected_bot)
         abort(500)
 
@@ -139,12 +151,20 @@ async def transmit_file(file_id):
             )
 
         except Exception as e:
+            error_message = str(e)
             logger.error(
                 "Error during file streaming - File: %s, Bot: %s, Error: %s",
                 file_name,
                 bot_name,
-                e,
+                error_message,
             )
+
+            if "Cannot send requests while disconnected" in error_message:
+                logger.critical(
+                    "Connection error detected, triggering emergency restart"
+                )
+                emergency_restart("Telegram connection lost during file streaming")
+
             raise
         finally:
             await return_streaming_bot(selected_bot)

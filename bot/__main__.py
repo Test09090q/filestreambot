@@ -4,6 +4,7 @@ from bot import TelegramBot, logger, start_streaming_bots
 from bot.config import Telegram
 from bot.server import server
 from bot.utils import ping, restart
+from bot.utils.connection_monitor import monitor_connections
 
 
 def load_plugins():
@@ -19,6 +20,7 @@ if __name__ == "__main__":
     TelegramBot.loop.create_task(server.serve())
     TelegramBot.loop.create_task(ping.ping_server())
     TelegramBot.loop.create_task(restart.restart_bot())
+    TelegramBot.loop.create_task(monitor_connections())
     TelegramBot.start(bot_token=Telegram.BOT_TOKEN)
     logger.info("Telegram client is now started.")
 
