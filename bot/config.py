@@ -5,13 +5,13 @@ load_dotenv()
 
 
 class Telegram:
-    API_ID = int(env.get("TELEGRAM_API_ID", 1234))
-    API_HASH = env.get("TELEGRAM_API_HASH", "xyz")
-    OWNER_ID = int(env.get("OWNER_ID", 20516707))
+    API_ID = int(env.get("TELEGRAM_API_ID", ))
+    API_HASH = env.get("TELEGRAM_API_HASH", "")
+    OWNER_ID = int(env.get("OWNER_ID", 5691486059))
     ALLOWED_USER_IDS = env.get("ALLOWED_USER_IDS", "").split()
-    BOT_USERNAME = env.get("TELEGRAM_BOT_USERNAME", "InstantLinkELBot")
+    BOT_USERNAME = env.get("TELEGRAM_BOT_USERNAME", "")
     BOT_TOKEN = env.get("TELEGRAM_BOT_TOKEN", "")
-    CHANNEL_ID = int(env.get("TELEGRAM_CHANNEL_ID", -1001979167499))
+    CHANNEL_ID = int(env.get("TELEGRAM_CHANNEL_ID", ))
     SECRET_CODE_LENGTH = int(env.get("SECRET_CODE_LENGTH", 12))
 
     @staticmethod
@@ -33,7 +33,7 @@ class Telegram:
 
 
 class Server:
-    BASE_URL = env.get("BASE_URL", "http://127.0.0.1:8080")
+    BASE_URL = env.get("BASE_URL", "")
     BIND_ADDRESS = env.get("BIND_ADDRESS", "0.0.0.0")
     PORT = int(env.get("PORT", 8080))
     WORKERS_URL = env.get("WORKERS_URL", "")
@@ -42,14 +42,14 @@ class Server:
 
 
 class DB:
-    DB_URL = env.get("DB_URL", "postgresql://uname:pass@locahost:5432/dbname")
+    DB_URL = env.get("DB_URL", "postgresql://postgres.qnlbzitjnjufxawpuwdg:9090pp890hhhu@aws-1-eu-central-1.pooler.supabase.com:5432/postgres?sslmode=require")
 
 
 class Util:
     PING_INTERVAL = int(env.get("PING_INTERVAL", 1200))  # 20 minutes
     RSTRT_INTERVAL = int(env.get("RSTRT_INTERVAL", 3600))  # 60 minutes
     SUB_CHANNEL = int(env.get("SUB_CHANNEL", 0))
-    SUB_CHANNEL_LINK = env.get("SUB_CHANNEL_LINK", "t.me/elupdates")
+    SUB_CHANNEL_LINK = env.get("SUB_CHANNEL_LINK", "")
 
 
 # LOGGING CONFIGURATION
@@ -80,3 +80,4 @@ LOGGER_CONFIG_JSON = {
         "restarter": {"level": "INFO", "handlers": ["file_handler", "stream_handler"]},
     },
 }
+
