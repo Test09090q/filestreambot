@@ -1,15 +1,18 @@
+import asyncio
 import os
 import sys
-import asyncio
+
 from telethon import Button
 from telethon.events import NewMessage
 from telethon.tl.custom.message import Message
+from telethon.tl.types import KeyboardButtonStyle, KeyboardButtonUrl
+
 from bot import TelegramBot
 from bot.config import Telegram
-from bot.modules import static
-from bot.modules.decorators import verify_user
 from bot.db.sql import add_user
 from bot.db.stats_sql import get_formatted_stats
+from bot.modules import static
+from bot.modules.decorators import verify_user
 
 
 @TelegramBot.on(NewMessage(incoming=True, pattern=r"^/start$"))
@@ -32,12 +35,28 @@ async def welcome(event: NewMessage.Event | Message):
         stats_text = ""
 
     await event.reply(
-        message=static.WelcomeText % {"first_name": event.sender.first_name} + stats_text,
+        message=static.WelcomeText % {"first_name": event.sender.first_name}
+        + stats_text,
         buttons=[
             [
-                Button.url(text="🔔 Update Channel", url="https://t.me/ELUpdates"),
-                Button.url(text="👥 Support Group", url="https://t.me/ELSupport"),
-            ]
+                KeyboardButtonUrl(
+                    text="🌟 More Amazing Bots",
+                    url="https://t.me/ELUpdates",
+                    style=KeyboardButtonStyle(bg_primary=True),
+                ),
+                KeyboardButtonUrl(
+                    text="🔔 Update Channel",
+                    url="https://t.me/FileToLinkEL",
+                    style=KeyboardButtonStyle(bg_success=True),
+                ),
+            ],
+            [
+                KeyboardButtonUrl(
+                    text="👥 Support Group",
+                    url="https://t.me/ELSupportz",
+                    style=KeyboardButtonStyle(bg_danger=True),
+                ),
+            ],
         ],
     )
 
@@ -47,7 +66,7 @@ async def welcome(event: NewMessage.Event | Message):
 async def file_statistics(event: NewMessage.Event | Message):
     try:
         stats = await get_formatted_stats()
-        
+
         stats_message = f"""**📊 File Statistics**
 
 **📅 Today:**
@@ -70,7 +89,7 @@ async def file_statistics(event: NewMessage.Event | Message):
 """
 
         await event.reply(stats_message)
-        
+
     except Exception as e:
         await event.reply(
             "❌ Error retrieving statistics. Please try again later. Error: %s", e
