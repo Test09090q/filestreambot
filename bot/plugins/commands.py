@@ -40,19 +40,19 @@ async def welcome(event: NewMessage.Event | Message):
         buttons=[
             [
                 KeyboardButtonUrl(
-                    text="🌟 More Amazing Bots",
+                    text="",
                     url="https://t.me/ELUpdates",
                     style=KeyboardButtonStyle(bg_primary=True),
                 ),
                 KeyboardButtonUrl(
-                    text="🔔 Update Channel",
+                    text="",
                     url="https://t.me/FileToLinkEL",
                     style=KeyboardButtonStyle(bg_success=True),
                 ),
             ],
             [
                 KeyboardButtonUrl(
-                    text="👥 Support Group",
+                    text="",
                     url="https://t.me/ELSupportz",
                     style=KeyboardButtonStyle(bg_danger=True),
                 ),
@@ -85,7 +85,7 @@ async def file_statistics(event: NewMessage.Event | Message):
 • Total Files: `{stats['total_files']}`
 • Total Size: `{stats['total_size']}`
 
-**@ELUpdates**
+**@naughty_hot_girllls**
 """
 
         await event.reply(stats_message)
