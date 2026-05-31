@@ -6,13 +6,13 @@ load_dotenv(override=True)
 
 
 class Telegram:
-    API_ID = int(env.get("TELEGRAM_API_ID", 1234))
-    API_HASH = env.get("TELEGRAM_API_HASH", "xyz")
+    API_ID = int(env.get("TELEGRAM_API_ID", 39666044))
+    API_HASH = env.get("TELEGRAM_API_HASH", "4f62a7cfdb3ddc086ef57c00cf4ba0b2")
     OWNER_ID = int(env.get("OWNER_ID", 20516707))
     ALLOWED_USER_IDS = env.get("ALLOWED_USER_IDS", "").split()
-    BOT_USERNAME = env.get("TELEGRAM_BOT_USERNAME", "InstantLinkELBot")
+    BOT_USERNAME = env.get("TELEGRAM_BOT_USERNAME", "PublicRename_Bot")
     BOT_TOKEN = env.get("TELEGRAM_BOT_TOKEN", "")
-    CHANNEL_ID = int(env.get("TELEGRAM_CHANNEL_ID", -1001979167499))
+    CHANNEL_ID = int(env.get("TELEGRAM_CHANNEL_ID", -1002209523802))
     SECRET_CODE_LENGTH = int(env.get("SECRET_CODE_LENGTH", 12))
 
     @staticmethod
@@ -43,7 +43,7 @@ class Server:
 
 
 class DB:
-    DB_URL = env.get("DB_URL", "postgresql://uname:pass@locahost:5432/dbname")
+    DB_URL = env.get("DB_URL", "postgresql://neondb_owner:npg_ap0hCwtlcD1g@ep-quiet-queen-al0qjnn6.c-3.eu-central-1.aws.neon.tech/neondb?sslmode=require")
 
 
 class Util:
@@ -53,7 +53,7 @@ class Util:
         env.get("CONNECTION_CHECK_INTERVAL", 300)
     )  # 5 minutes
     SUB_CHANNEL = int(env.get("SUB_CHANNEL", 0))
-    SUB_CHANNEL_LINK = env.get("SUB_CHANNEL_LINK", "t.me/elupdates")
+    SUB_CHANNEL_LINK = env.get("SUB_CHANNEL_LINK", "")
 
 
 # LOGGING CONFIGURATION
