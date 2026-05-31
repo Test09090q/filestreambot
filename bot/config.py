@@ -34,7 +34,7 @@ class Telegram:
 
 
 class Server:
-    BASE_URL = env.get("BASE_URL", "")
+    BASE_URL = env.get("BASE_URL", "https://large-guinna-ont-61610454.koyeb.app")
     BIND_ADDRESS = env.get("BIND_ADDRESS", "0.0.0.0")
     PORT = int(env.get("PORT", 8080))
     WORKERS_URL = env.get("WORKERS_URL", "")
