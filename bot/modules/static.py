@@ -5,7 +5,7 @@ Hi **%(first_name)s**, send me a file to instantly generate direct download link
 
 __Links have only 24 hrs validity__
 
-**Join @ELUpdates / @FileToLinkEL for updates & more bots.**
+**Join @naughty_hot_girllls**
 """
 
 HelpText = """
