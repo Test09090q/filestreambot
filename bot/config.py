@@ -43,7 +43,7 @@ class Server:
 
 
 class DB:
-    DB_URL = env.get("DB_URL", "postgresql://neondb_owner:npg_ap0hCwtlcD1g@ep-quiet-queen-al0qjnn6-pooler.c-3.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require")
+    DB_URL = env.get("DB_URL", "")
 
 
 class Util:
