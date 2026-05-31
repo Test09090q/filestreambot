@@ -9,23 +9,29 @@ async def users_info():
     blocked = 0
     identity = await query_msg()
 
-    for user_id in identity:
-        typing_successful = False
-        try:
-            async with TelegramBot.action(int(user_id[0]), "typing"):
-                await asyncio.sleep(0.1)
-                typing_successful = True
-        except FloodWaitError as e:
-            logger.info("Floodwait while broadcast, sleeping %s", user_id)
-            await asyncio.sleep(e.seconds)
-        except Exception:
-            typing_successful = False
-            await del_user(user_id)
-            logger.info("Deleted user id %s from broadcast list", user_id)
+    semaphore = asyncio.Semaphore(50)
 
-        if typing_successful:
-            active += 1
-        else:
-            blocked += 1
+    async def check_user(user_id):
+        nonlocal active, blocked
+        while True:
+            try:
+                async with semaphore:
+                    async with TelegramBot.action(int(user_id[0]), "typing"):
+                        await asyncio.sleep(0.1)
+                active += 1
+                return
+            except FloodWaitError as e:
+                await asyncio.sleep(e.seconds)
+            except Exception as e:
+                if "disconnected".lower() in str(e).lower():
+                    logger.info("User id %s - Bot disconnected: %s", user_id[0], e)
+                    return
+                blocked += 1
+                await del_user(user_id)
+                logger.info("Deleted user id %s from broadcast list: %s", user_id[0], e)
+                return
+
+    tasks = [check_user(user_id) for user_id in identity]
+    await asyncio.gather(*tasks)
 
     return active, blocked

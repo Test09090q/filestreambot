@@ -14,3 +14,8 @@ async def restart_bot():
         await asyncio.sleep(restart_interval)
         logger.warning("Scheduled restart initiated")
         os.execv(sys.executable, ["python3", "-m", "bot"] + sys.argv)
+
+
+def emergency_restart(reason="Unknown"):
+    logger.critical("Emergency restart triggered - Reason: %s", reason)
+    os.execv(sys.executable, ["python3", "-m", "bot"] + sys.argv)

@@ -1,9 +1,11 @@
 WelcomeText = """
 Hi **%(first_name)s**, send me a file to instantly generate direct download links.
 
-__Links have only 3 hrs validity__
+‼️ **Sending NSFW content is strictly prohibited. If you send NSFW content, you will be permanently banned from using this bot.**
 
-**Join @ELUpdates for updates & more bots.**
+__Links have only 24 hrs validity__
+
+**Join @ELUpdates / @FileToLinkEL for updates & more bots.**
 """
 
 HelpText = """

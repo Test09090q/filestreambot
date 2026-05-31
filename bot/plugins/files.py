@@ -1,6 +1,6 @@
 from logging import getLogger
-from secrets import token_hex
 from random import choice
+from secrets import token_hex
 
 from telethon import Button
 from telethon.errors import (
@@ -11,14 +11,20 @@ from telethon.errors import (
 from telethon.errors.rpcerrorlist import UserNotParticipantError
 from telethon.events import NewMessage
 from telethon.tl.custom import Message
+from telethon.tl.types import (
+    KeyboardButton,
+    KeyboardButtonCallback,
+    KeyboardButtonStyle,
+    KeyboardButtonUrl,
+)
 
 from bot import TelegramBot
 from bot.config import Server, Telegram, Util
-from bot.modules.decorators import verify_user
-from bot.modules import static
-from bot.modules.telegram import filter_files, send_message
 from bot.db.ban_sql import is_banned
 from bot.db.stats_sql import add_file_size
+from bot.modules import static
+from bot.modules.decorators import verify_user
+from bot.modules.telegram import filter_files, send_message
 
 logger = getLogger("fileserve")
 
@@ -48,7 +54,7 @@ async def user_file_handler(event: NewMessage.Event | Message):
 
     try:
         file_size = 0
-        if hasattr(event.message, 'file') and event.message.file:
+        if hasattr(event.message, "file") and event.message.file:
             file_size = event.message.file.size or 0
         if file_size > 0:
             await add_file_size(file_size)
@@ -115,20 +121,38 @@ async def user_file_handler(event: NewMessage.Event | Message):
     #     )
     # else:
     kb = [
-            [
-                Button.url("📩 Download", dl_link),
-            ],
-            
-        ]
+        [
+            KeyboardButtonUrl(
+                text="📩 Download",
+                url=dl_link,
+                style=KeyboardButtonStyle(bg_success=True),
+            ),
+        ],
+    ]
     if WORKERS_URLs:
-        kb.append([Button.url("🚀 Fast Download", wr_link)])
+        kb.append(
+            [
+                KeyboardButtonUrl(
+                    text="🚀 Fast Download",
+                    url=wr_link,
+                    style=KeyboardButtonStyle(bg_primary=True),
+                )
+            ]
+        )
         mess = f"**Download Links:**\n\n**📩 Download Link:** `{dl_link}`\n\n**🚀 Fast Download Link:** `{wr_link}`\n\n▸ __You can copy paste the link in any streaming supported media player & stream__\n▸ __Use normal download link if fast link is not working__\n**@ELUpdates**"
     else:
         mess = f"**Download Links:**\n\n**📩 Download Link:** `{dl_link}`\n\n▸ __You can copy paste the link in any streaming supported media player & stream__"
-        
-    kb.append([Button.inline("❌ Revoke", f"rm_{message_id}_{secret_code}")])
-    
-        
+
+    kb.append(
+        [
+            KeyboardButtonCallback(
+                text="❌ Revoke",
+                data=f"rm_{message_id}_{secret_code}",
+                style=KeyboardButtonStyle(bg_danger=True),
+            )
+        ]
+    )
+
     await event.reply(
         message=mess,
         buttons=kb,
