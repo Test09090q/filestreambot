@@ -1,14 +1,11 @@
 import threading
 import math
 from datetime import datetime, timedelta, timezone
-
 from sqlalchemy import create_engine, Column, BigInteger, Date, func
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy.pool import QueuePool
-
+from sqlalchemy.pool import StaticPool
 from bot.config import DB
 
 BASE = declarative_base()
@@ -16,7 +13,6 @@ BASE = declarative_base()
 
 class FileStats(BASE):
     __tablename__ = "file_stats"
-
     date = Column(Date, primary_key=True)
     total_files = Column(BigInteger, default=0)
     total_size = Column(BigInteger, default=0)
@@ -28,30 +24,10 @@ class FileStats(BASE):
 
 
 def start() -> scoped_session:
-    engine = create_engine(
-        DB.DB_URL,
-        client_encoding="utf8",
-        poolclass=QueuePool,           # Better for production
-        pool_pre_ping=True,            # Keeps connections alive
-        pool_recycle=300,              # Recycle every 5 mins
-        pool_size=10,
-        max_overflow=20,
-        connect_args={
-            "sslmode": "require",
-            "connect_timeout": 10,
-        }
-    )
-
+    engine = create_engine(DB.DB_URL, client_encoding="utf8", poolclass=StaticPool)
     BASE.metadata.bind = engine
     BASE.metadata.create_all(engine)
-
-    return scoped_session(
-        sessionmaker(
-            bind=engine,
-            autoflush=False,
-            expire_on_commit=False
-        )
-    )
+    return scoped_session(sessionmaker(bind=engine, autoflush=False))
 
 
 SESSION = start()
@@ -64,136 +40,88 @@ def get_current_gmt_date():
 
 async def add_file_size(file_size: int):
     with INSERTION_LOCK:
-        session = SESSION()
         try:
             today = get_current_gmt_date()
-
-            stats = session.query(FileStats).filter_by(date=today).one_or_none()
-
-            if stats:
+            try:
+                stats = SESSION.query(FileStats).filter_by(date=today).one()
                 stats.total_files += 1
                 stats.total_size += file_size
-            else:
-                stats = FileStats(
-                    date=today,
-                    total_files=1,
-                    total_size=file_size
-                )
-                session.add(stats)
+            except NoResultFound:
+                stats = FileStats(date=today, total_files=1, total_size=file_size)
+                SESSION.add(stats)
 
-            session.commit()
-            return True
-
-        except SQLAlchemyError as e:
-            session.rollback()
-            print(f"Error in add_file_size: {e}")
-            return False
-        except Exception as e:  # Catch anything else
-            session.rollback()
-            print(f"Unexpected error in add_file_size: {e}")
-            return False
+            SESSION.commit()
+        except Exception as e:
+            SESSION.rollback()
+            raise e
         finally:
-            session.close()
+            SESSION.close()
 
 
 async def get_total_stats():
-    session = SESSION()
     try:
-        result = session.query(
+        result = SESSION.query(
             func.sum(FileStats.total_files).label("total_files"),
             func.sum(FileStats.total_size).label("total_size"),
         ).first()
-
-        total_files = int(result.total_files) if result and result.total_files else 0
-        total_size = int(result.total_size) if result and result.total_size else 0
+        total_files = int(result.total_files) if result.total_files else 0
+        total_size = int(result.total_size) if result.total_size else 0
 
         return total_files, total_size
-
-    except SQLAlchemyError as e:
-        session.rollback()
-        print(f"Error in get_total_stats: {e}")
-        return 0, 0
-    except Exception as e:
-        print(f"Unexpected error in get_total_stats: {e}")
+    except Exception:
         return 0, 0
     finally:
-        session.close()
+        SESSION.close()
 
 
 async def get_today_stats():
-    session = SESSION()
     try:
         today = get_current_gmt_date()
-        stats = session.query(FileStats).filter_by(date=today).first()
+        stats = SESSION.query(FileStats).filter_by(date=today).first()
 
         if stats:
             return int(stats.total_files), int(stats.total_size)
         return 0, 0
-
-    except SQLAlchemyError as e:
-        session.rollback()
-        print(f"Error in get_today_stats: {e}")
-        return 0, 0
-    except Exception as e:
-        print(f"Unexpected error in get_today_stats: {e}")
+    except Exception:
         return 0, 0
     finally:
-        session.close()
+        SESSION.close()
 
 
 async def get_yesterday_stats():
-    session = SESSION()
     try:
         yesterday = get_current_gmt_date() - timedelta(days=1)
-        stats = session.query(FileStats).filter_by(date=yesterday).first()
+        stats = SESSION.query(FileStats).filter_by(date=yesterday).first()
 
         if stats:
             return int(stats.total_files), int(stats.total_size)
         return 0, 0
-
-    except SQLAlchemyError as e:
-        session.rollback()
-        print(f"Error in get_yesterday_stats: {e}")
-        return 0, 0
-    except Exception as e:
-        print(f"Unexpected error in get_yesterday_stats: {e}")
+    except Exception:
         return 0, 0
     finally:
-        session.close()
+        SESSION.close()
 
 
 async def get_last_7_days_stats():
-    session = SESSION()
     try:
         seven_days_ago = get_current_gmt_date() - timedelta(days=7)
         today = get_current_gmt_date()
-
         result = (
-            session.query(
+            SESSION.query(
                 func.sum(FileStats.total_files).label("total_files"),
                 func.sum(FileStats.total_size).label("total_size"),
             )
-            .filter(
-                FileStats.date >= seven_days_ago,
-                FileStats.date <= today
-            )
+            .filter(FileStats.date >= seven_days_ago, FileStats.date <= today)
             .first()
         )
-
-        total_files = int(result.total_files) if result and result.total_files else 0
-        total_size = int(result.total_size) if result and result.total_size else 0
+        total_files = int(result.total_files) if result.total_files else 0
+        total_size = int(result.total_size) if result.total_size else 0
 
         return total_files, total_size
-
-    except SQLAlchemyError as e:
-        session.rollback()
-        print(f"Error in get_last_7_days_stats: {e}")
-        return 0, 0
-    except Exception as e:
-        print(f"Unexpected error in get_last_7_days_stats: {e}")
+    except Exception:
         return 0, 0
     finally:
-        session.close()
+        SESSION.close()
 
 
 def format_file_size(size_bytes) -> str:
@@ -201,15 +129,14 @@ def format_file_size(size_bytes) -> str:
         size_bytes = float(size_bytes) if size_bytes else 0.0
     except (ValueError, TypeError):
         return "0 B"
-
+    
     if size_bytes == 0:
         return "0 B"
-
+    
     size_names = ["B", "KB", "MB", "GB", "TB"]
     i = int(math.floor(math.log(size_bytes, 1024)))
     p = math.pow(1024, i)
     s = round(size_bytes / p, 2)
-
     return f"{s} {size_names[i]}"
 
 
@@ -218,7 +145,6 @@ async def get_formatted_stats():
     today_files, today_size = await get_today_stats()
     yesterday_files, yesterday_size = await get_yesterday_stats()
     week_files, week_size = await get_last_7_days_stats()
-
     return {
         "total_files": total_files,
         "total_size": format_file_size(total_size),
